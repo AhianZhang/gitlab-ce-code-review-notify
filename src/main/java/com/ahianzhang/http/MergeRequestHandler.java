@@ -1,7 +1,7 @@
 package com.ahianzhang.http;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ahianzhang.model.ActionCard;
+import com.ahianzhang.model.DingTalkNotification;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 
-import java.util.Map;
+import java.io.IOException;
 
 /**
  * @author ahianzhang
@@ -24,17 +24,10 @@ public class MergeRequestHandler extends SimpleChannelInboundHandler<HttpContent
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, HttpContent msg) throws Exception {
-    System.out.println(msg);
     ByteBuf echoMsg = msg.content();
-    ObjectMapper objectMapper = new ObjectMapper();
     String jsonStr = new String(ByteBufUtil.getBytes(echoMsg));
 
-    Map<String, Object> map =
-        objectMapper.readValue(jsonStr, new TypeReference<Map<String, Object>>() {});
-
-    System.out.println(map.toString());
-    System.out.println(new String(ByteBufUtil.getBytes(echoMsg)));
-
+    HttpUtil.post(concat(jsonStr));
     DefaultFullHttpResponse response =
         new DefaultFullHttpResponse(
             HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.copiedBuffer(echoMsg));
@@ -46,5 +39,24 @@ public class MergeRequestHandler extends SimpleChannelInboundHandler<HttpContent
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     cause.printStackTrace();
     ctx.close();
+  }
+
+  private String concat(String json) throws IOException {
+    DingTalkNotification currentMergeRequest =
+        new DingTalkNotification().getCurrentMergeRequest(json);
+    String projectName = "项目名称：" + currentMergeRequest.getProjectName();
+    String committer = "提交人：" + currentMergeRequest.getCommitter();
+    String approvalMember = "审批人：" + currentMergeRequest.getApprovalMember();
+    String content = "内容" + currentMergeRequest.getContent();
+    String crUrl = "地址" + currentMergeRequest.getCrUrl();
+    String toJson = new ActionCard()
+            .appendRow(projectName)
+            .appendRow(committer)
+            .appendRow(approvalMember)
+            .appendRow(content)
+            .appendRow(crUrl)
+            .singleURL(currentMergeRequest.getCrUrl()).toJson();
+
+  return toJson;
   }
 }
