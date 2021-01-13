@@ -14,7 +14,8 @@ import java.nio.charset.StandardCharsets;
  **/
 public class HttpUtil {
     public static void post(String data) throws Exception {
-        URL url = new URL("https://oapi.dingtalk.com/robot/send?access_token=cce265517886dac508bcde78cacdccf52dca845920f29758ce4721b85f4e48e8");
+        String dingTalkAddress = System.getProperty("dingTalkAddress");
+        URL url = new URL(dingTalkAddress);
         URLConnection con = url.openConnection();
     System.out.println(data);
         HttpURLConnection http = (HttpURLConnection)con;

@@ -81,6 +81,7 @@ public class HttpServer {
           // childOption是用来给父级ServerChannel之下的Channels设置参数的
           .childOption(ChannelOption.SO_KEEPALIVE, true);
 
+      System.setProperty("dingTalkAddress",dingTalkRobotAddr);
       // 绑定并开始接受传入的连接。
       ChannelFuture f = b.bind(port).sync();
 
